@@ -1,4 +1,4 @@
-[index.html](https://github.com/user-attachments/files/23491660/index.html)
+[Uploading index.html…]()
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -18,7 +18,7 @@
             color: #fff;
             overflow: hidden;
             touch-action: none;
-            padding: 10px 0;
+            padding: 5px 0;
         }
         h1 {
             font-size: 20px;
@@ -32,6 +32,7 @@
             background: #000;
             max-width: 100%;
             height: auto;
+            touch-action: none;
         }
         .stats {
             background: rgba(0, 0, 0, 0.9);
@@ -50,32 +51,15 @@
             font-size: 14px;
             font-weight: bold;
         }
-        .controls {
-            display: flex;
-            gap: 40px;
-            margin: 10px 0;
-            padding: 10px;
-        }
-        .btn {
-            width: 80px;
-            height: 80px;
-            border: 4px solid #ffb6c1;
-            border-radius: 50%;
-            background: rgba(255, 182, 193, 0.3);
-            color: #fff;
-            font-size: 36px;
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s;
-            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.5);
-        }
-        .btn:active {
-            background: rgba(255, 182, 193, 0.7);
-            transform: scale(0.9);
-            box-shadow: 0 2px 8px rgba(255, 182, 193, 0.8);
+        .tips {
+            margin: 5px 0;
+            font-size: 12px;
+            color: #aaa;
+            max-width: 90%;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px;
+            border-radius: 5px;
         }
         .game-over {
             position: fixed;
@@ -107,23 +91,29 @@
             font-weight: bold;
             cursor: pointer;
         }
-        .tips {
-            margin: 5px 0;
-            font-size: 11px;
-            color: #aaa;
-            max-width: 90%;
-            text-align: center;
+        /* 触摸区域指示 */
+        .touch-indicator {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #fff;
+            z-index: 50;
+            pointer-events: none;
         }
         @media (max-width: 400px) {
             h1 { font-size: 18px; }
-            .btn { width: 70px; height: 70px; font-size: 32px; }
             .stat-row { font-size: 12px; }
         }
     </style>
 </head>
 <body>
     <h1>🐷 小猪下楼大冒险 🐷</h1>
-    <canvas id="gameCanvas" width="360" height="500"></canvas>
+    <canvas id="gameCanvas" width="360" height="560"></canvas>
     <div class="stats">
         <div class="stat-row">
             <span>楼层: <span id="floor">0</span></span>
@@ -134,11 +124,11 @@
             <span>下降: <span id="fallSpeed">0.3</span>/帧</span>
         </div>
     </div>
-    <div class="controls">
-        <div class="btn" id="leftBtn">←</div>
-        <div class="btn" id="rightBtn">→</div>
+    <div class="tips">
+        💡 触摸屏幕左边←向左 | 触摸右边→向右<br>
+        ⚠️ 屏幕会持续下降,不断往下掉!
     </div>
-    <div class="tips">⚠️ 屏幕持续下降,必须不断往下掉!</div>
+    <div class="touch-indicator" id="touchIndicator">👆 触摸屏幕控制移动</div>
     
     <div class="game-over" id="gameOver">
         <h2>💀 游戏结束!</h2>
@@ -152,15 +142,22 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const touchIndicator = document.getElementById('touchIndicator');
         
         // 根据屏幕大小调整画布
         function resizeCanvas() {
             const maxWidth = Math.min(window.innerWidth - 20, 360);
             canvas.style.width = maxWidth + 'px';
-            canvas.style.height = (maxWidth * 500 / 360) + 'px';
+            canvas.style.height = (maxWidth * 560 / 360) + 'px';
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
+        
+        // 隐藏触摸提示
+        setTimeout(() => {
+            touchIndicator.style.opacity = '0';
+            touchIndicator.style.transition = 'opacity 1s';
+        }, 3000);
         
         const game = {
             player: null,
@@ -175,7 +172,8 @@
             keys: { left: false, right: false },
             screenFallSpeed: 0.3,
             lastGeneratedFloor: 10,
-            platformSpacing: 120
+            platformSpacing: 120,
+            touchActive: false
         };
         
         class Player {
@@ -204,8 +202,8 @@
                 
                 this.checkCollisions();
                 
-                if (this.y > game.camera.y + 350) {
-                    game.camera.y = this.y - 350;
+                if (this.y > game.camera.y + 400) {
+                    game.camera.y = this.y - 400;
                 }
                 
                 const playerScreenY = this.y - game.camera.y;
@@ -437,6 +435,17 @@
                 game.obstacles.forEach(o => o.draw());
                 game.player.draw();
                 
+                // 触摸区域视觉提示
+                if (game.touchActive) {
+                    ctx.fillStyle = game.keys.left ? 'rgba(255, 0, 0, 0.1)' : 'rgba(0, 255, 0, 0.1)';
+                    const halfWidth = canvas.width / 2;
+                    if (game.keys.left) {
+                        ctx.fillRect(0, 0, halfWidth, canvas.height);
+                    } else {
+                        ctx.fillRect(halfWidth, 0, halfWidth, canvas.height);
+                    }
+                }
+                
                 const gradient = ctx.createLinearGradient(0, 0, 0, 80);
                 gradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
                 gradient.addColorStop(0.6, 'rgba(255, 0, 0, 0.4)');
@@ -470,6 +479,7 @@
             requestAnimationFrame(gameLoop);
         }
         
+        // 键盘控制(电脑)
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'a') game.keys.left = true;
             if (e.key === 'ArrowRight' || e.key === 'd') game.keys.right = true;
@@ -480,51 +490,88 @@
             if (e.key === 'ArrowRight' || e.key === 'd') game.keys.right = false;
         });
         
-        const leftBtn = document.getElementById('leftBtn');
-        const rightBtn = document.getElementById('rightBtn');
+        // 触摸控制(手机) - 新逻辑
+        function handleTouch(e) {
+            e.preventDefault();
+            
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const touchX = touch.clientX - rect.left;
+                const canvasWidth = rect.width;
+                const halfWidth = canvasWidth / 2;
+                
+                game.touchActive = true;
+                
+                // 触摸左半边 = 向左走
+                if (touchX < halfWidth) {
+                    game.keys.left = true;
+                    game.keys.right = false;
+                } 
+                // 触摸右半边 = 向右走
+                else {
+                    game.keys.right = true;
+                    game.keys.left = false;
+                }
+            }
+        }
         
-        // 触屏控制 - 优化版
-        leftBtn.addEventListener('touchstart', (e) => { 
-            e.preventDefault(); 
-            game.keys.left = true;
-            leftBtn.style.background = 'rgba(255, 182, 193, 0.7)';
-        });
-        leftBtn.addEventListener('touchend', (e) => { 
-            e.preventDefault(); 
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            game.touchActive = false;
             game.keys.left = false;
-            leftBtn.style.background = 'rgba(255, 182, 193, 0.3)';
+            game.keys.right = false;
+        }
+        
+        canvas.addEventListener('touchstart', handleTouch, { passive: false });
+        canvas.addEventListener('touchmove', handleTouch, { passive: false });
+        canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+        canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+        
+        // 鼠标控制(测试用)
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const halfWidth = rect.width / 2;
+            
+            game.touchActive = true;
+            
+            if (mouseX < halfWidth) {
+                game.keys.left = true;
+                game.keys.right = false;
+            } else {
+                game.keys.right = true;
+                game.keys.left = false;
+            }
         });
-        leftBtn.addEventListener('mousedown', () => {
-            game.keys.left = true;
-            leftBtn.style.background = 'rgba(255, 182, 193, 0.7)';
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (game.touchActive) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const halfWidth = rect.width / 2;
+                
+                if (mouseX < halfWidth) {
+                    game.keys.left = true;
+                    game.keys.right = false;
+                } else {
+                    game.keys.right = true;
+                    game.keys.left = false;
+                }
+            }
         });
-        leftBtn.addEventListener('mouseup', () => {
+        
+        canvas.addEventListener('mouseup', () => {
+            game.touchActive = false;
             game.keys.left = false;
-            leftBtn.style.background = 'rgba(255, 182, 193, 0.3)';
+            game.keys.right = false;
         });
         
-        rightBtn.addEventListener('touchstart', (e) => { 
-            e.preventDefault(); 
-            game.keys.right = true;
-            rightBtn.style.background = 'rgba(255, 182, 193, 0.7)';
-        });
-        rightBtn.addEventListener('touchend', (e) => { 
-            e.preventDefault(); 
+        canvas.addEventListener('mouseleave', () => {
+            game.touchActive = false;
+            game.keys.left = false;
             game.keys.right = false;
-            rightBtn.style.background = 'rgba(255, 182, 193, 0.3)';
         });
-        rightBtn.addEventListener('mousedown', () => {
-            game.keys.right = true;
-            rightBtn.style.background = 'rgba(255, 182, 193, 0.7)';
-        });
-        rightBtn.addEventListener('mouseup', () => {
-            game.keys.right = false;
-            rightBtn.style.background = 'rgba(255, 182, 193, 0.3)';
-        });
-        
-        // 防止误触
-        leftBtn.addEventListener('touchcancel', () => game.keys.left = false);
-        rightBtn.addEventListener('touchcancel', () => game.keys.right = false);
         
         init();
         gameLoop();
