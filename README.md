@@ -1,9 +1,9 @@
-[Uploading index.html…]()
+[index.html](https://github.com/user-attachments/files/23491660/index.html)
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🐷 小猪下楼大冒险</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,136 +12,155 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
             font-family: Arial, sans-serif;
             color: #fff;
             overflow: hidden;
             touch-action: none;
+            padding: 10px 0;
         }
         h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
+            font-size: 20px;
+            margin: 5px 0;
             text-shadow: 0 0 10px rgba(255, 182, 193, 0.8);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
         }
         #gameCanvas {
             border: 3px solid #ffb6c1;
             border-radius: 8px;
             box-shadow: 0 0 30px rgba(255, 182, 193, 0.4);
             background: #000;
+            max-width: 100%;
+            height: auto;
         }
         .stats {
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 8px 15px;
             border-radius: 8px;
             border: 2px solid #ffb6c1;
-            min-width: 280px;
+            width: 90%;
+            max-width: 360px;
             text-align: center;
-            margin: 10px 0;
+            margin: 5px 0;
         }
         .stat-row {
             display: flex;
             justify-content: space-around;
-            margin: 8px 0;
-            font-size: 18px;
+            margin: 4px 0;
+            font-size: 14px;
             font-weight: bold;
         }
         .controls {
             display: flex;
-            gap: 20px;
+            gap: 40px;
+            margin: 10px 0;
+            padding: 10px;
         }
         .btn {
-            width: 100px;
-            height: 100px;
-            border: 3px solid #ffb6c1;
+            width: 80px;
+            height: 80px;
+            border: 4px solid #ffb6c1;
             border-radius: 50%;
-            background: rgba(255, 182, 193, 0.2);
+            background: rgba(255, 182, 193, 0.3);
             color: #fff;
-            font-size: 32px;
+            font-size: 36px;
             cursor: pointer;
             user-select: none;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.1s;
+            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.5);
         }
         .btn:active {
-            background: rgba(255, 182, 193, 0.5);
-            transform: scale(0.95);
+            background: rgba(255, 182, 193, 0.7);
+            transform: scale(0.9);
+            box-shadow: 0 2px 8px rgba(255, 182, 193, 0.8);
         }
         .game-over {
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0, 0, 0, 0.95);
-            padding: 40px;
+            padding: 30px 20px;
             border-radius: 16px;
             border: 3px solid #ffb6c1;
             text-align: center;
             display: none;
             z-index: 100;
+            width: 90%;
+            max-width: 300px;
+        }
+        .game-over h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
         }
         .restart-btn {
-            margin-top: 20px;
-            padding: 15px 40px;
+            margin-top: 15px;
+            padding: 12px 30px;
             background: #ffb6c1;
             border: none;
             border-radius: 8px;
             color: #000;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
         }
         .tips {
-            margin-top: 10px;
-            font-size: 12px;
+            margin: 5px 0;
+            font-size: 11px;
             color: #aaa;
-            max-width: 300px;
+            max-width: 90%;
             text-align: center;
+        }
+        @media (max-width: 400px) {
+            h1 { font-size: 18px; }
+            .btn { width: 70px; height: 70px; font-size: 32px; }
+            .stat-row { font-size: 12px; }
         }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <h1>🐷 小猪下楼大冒险 🐷</h1>
-        <canvas id="gameCanvas" width="360" height="640"></canvas>
-        <div class="stats">
-            <div class="stat-row">
-                <span>楼层: <span id="floor">0</span></span>
-                <span>时间: <span id="time">0.0s</span></span>
-            </div>
-            <div class="stat-row">
-                <span>速度: <span id="speed">1.0x</span></span>
-                <span>下降: <span id="fallSpeed">0.3</span>/帧</span>
-            </div>
+    <h1>🐷 小猪下楼大冒险 🐷</h1>
+    <canvas id="gameCanvas" width="360" height="500"></canvas>
+    <div class="stats">
+        <div class="stat-row">
+            <span>楼层: <span id="floor">0</span></span>
+            <span>时间: <span id="time">0.0s</span></span>
         </div>
-        <div class="controls">
-            <div class="btn" id="leftBtn">←</div>
-            <div class="btn" id="rightBtn">→</div>
+        <div class="stat-row">
+            <span>速度: <span id="speed">1.0x</span></span>
+            <span>下降: <span id="fallSpeed">0.3</span>/帧</span>
         </div>
-        <div class="tips">
-            💡 屏幕会持续向下移动,必须不断下落!<br>
-            ⚠️ 停在平台上太久会被吞噬!
+    </div>
+    <div class="controls">
+        <div class="btn" id="leftBtn">←</div>
+        <div class="btn" id="rightBtn">→</div>
+    </div>
+    <div class="tips">⚠️ 屏幕持续下降,必须不断往下掉!</div>
+    
+    <div class="game-over" id="gameOver">
+        <h2>💀 游戏结束!</h2>
+        <div style="margin: 15px 0; font-size: 16px;">
+            <p>下到第 <span id="finalFloor" style="color: #ffd700;">0</span> 层</p>
+            <p>用时 <span id="finalTime" style="color: #00ff00;">0.0</span> 秒</p>
         </div>
-        <div class="game-over" id="gameOver">
-            <h2>💀 游戏结束!</h2>
-            <div style="margin: 20px 0; font-size: 18px;">
-                <p>下到第 <span id="finalFloor" style="color: #ffd700;">0</span> 层</p>
-                <p>用时 <span id="finalTime" style="color: #00ff00;">0.0</span> 秒</p>
-            </div>
-            <button class="restart-btn" onclick="restartGame()">🔄 重新挑战</button>
-        </div>
+        <button class="restart-btn" onclick="restartGame()">🔄 重新挑战</button>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        
+        // 根据屏幕大小调整画布
+        function resizeCanvas() {
+            const maxWidth = Math.min(window.innerWidth - 20, 360);
+            canvas.style.width = maxWidth + 'px';
+            canvas.style.height = (maxWidth * 500 / 360) + 'px';
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
         
         const game = {
             player: null,
@@ -185,12 +204,10 @@
                 
                 this.checkCollisions();
                 
-                // 摄像机只向下移动
-                if (this.y > game.camera.y + 400) {
-                    game.camera.y = this.y - 400;
+                if (this.y > game.camera.y + 350) {
+                    game.camera.y = this.y - 350;
                 }
                 
-                // 检查是否被屏幕上方吞噬
                 const playerScreenY = this.y - game.camera.y;
                 if (playerScreenY < 0) {
                     this.gameOver();
@@ -248,18 +265,15 @@
             draw() {
                 const screenY = this.y - game.camera.y;
                 
-                // 粉色小猪
                 ctx.fillStyle = '#ffb3d9';
                 ctx.fillRect(this.x, screenY, this.width, this.height);
                 
-                // 眼睛
                 ctx.fillStyle = '#000';
                 ctx.beginPath();
                 ctx.arc(this.x + 8, screenY + 10, 3, 0, Math.PI * 2);
                 ctx.arc(this.x + 22, screenY + 10, 3, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // 猪鼻子
                 ctx.fillStyle = '#ff85a1';
                 ctx.fillRect(this.x + 10, screenY + 18, 10, 6);
                 ctx.fillStyle = '#000';
@@ -414,7 +428,6 @@
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // 摄像机持续向下移动
                 game.camera.y += game.screenFallSpeed;
                 
                 updatePlatformGeneration();
@@ -424,33 +437,31 @@
                 game.obstacles.forEach(o => o.draw());
                 game.player.draw();
                 
-                // 危险区域
-                const gradient = ctx.createLinearGradient(0, 0, 0, 100);
+                const gradient = ctx.createLinearGradient(0, 0, 0, 80);
                 gradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
                 gradient.addColorStop(0.6, 'rgba(255, 0, 0, 0.4)');
                 gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
                 ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, canvas.width, 100);
+                ctx.fillRect(0, 0, canvas.width, 80);
                 
                 ctx.strokeStyle = 'rgba(255, 0, 0, 0.9)';
-                ctx.lineWidth = 4;
-                ctx.setLineDash([15, 8]);
+                ctx.lineWidth = 3;
+                ctx.setLineDash([12, 6]);
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 ctx.lineTo(canvas.width, 0);
                 ctx.stroke();
                 ctx.setLineDash([]);
                 
-                // 警告
                 const playerScreenY = game.player.y - game.camera.y;
-                if (playerScreenY < 150) {
-                    const warningAlpha = 1 - playerScreenY / 150;
+                if (playerScreenY < 120) {
+                    const warningAlpha = 1 - playerScreenY / 120;
                     ctx.fillStyle = `rgba(255, 255, 0, ${warningAlpha})`;
-                    ctx.font = 'bold 20px Arial';
+                    ctx.font = 'bold 16px Arial';
                     ctx.textAlign = 'center';
                     
                     if (Math.floor(Date.now() / 300) % 2 === 0) {
-                        ctx.fillText('⚠️ 危险! 快下落! ⚠️', canvas.width / 2, 40);
+                        ctx.fillText('⚠️ 危险! ⚠️', canvas.width / 2, 35);
                     }
                 }
                 
@@ -472,15 +483,48 @@
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
         
-        leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); game.keys.left = true; });
-        leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); game.keys.left = false; });
-        leftBtn.addEventListener('mousedown', () => game.keys.left = true);
-        leftBtn.addEventListener('mouseup', () => game.keys.left = false);
+        // 触屏控制 - 优化版
+        leftBtn.addEventListener('touchstart', (e) => { 
+            e.preventDefault(); 
+            game.keys.left = true;
+            leftBtn.style.background = 'rgba(255, 182, 193, 0.7)';
+        });
+        leftBtn.addEventListener('touchend', (e) => { 
+            e.preventDefault(); 
+            game.keys.left = false;
+            leftBtn.style.background = 'rgba(255, 182, 193, 0.3)';
+        });
+        leftBtn.addEventListener('mousedown', () => {
+            game.keys.left = true;
+            leftBtn.style.background = 'rgba(255, 182, 193, 0.7)';
+        });
+        leftBtn.addEventListener('mouseup', () => {
+            game.keys.left = false;
+            leftBtn.style.background = 'rgba(255, 182, 193, 0.3)';
+        });
         
-        rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); game.keys.right = true; });
-        rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); game.keys.right = false; });
-        rightBtn.addEventListener('mousedown', () => game.keys.right = true);
-        rightBtn.addEventListener('mouseup', () => game.keys.right = false);
+        rightBtn.addEventListener('touchstart', (e) => { 
+            e.preventDefault(); 
+            game.keys.right = true;
+            rightBtn.style.background = 'rgba(255, 182, 193, 0.7)';
+        });
+        rightBtn.addEventListener('touchend', (e) => { 
+            e.preventDefault(); 
+            game.keys.right = false;
+            rightBtn.style.background = 'rgba(255, 182, 193, 0.3)';
+        });
+        rightBtn.addEventListener('mousedown', () => {
+            game.keys.right = true;
+            rightBtn.style.background = 'rgba(255, 182, 193, 0.7)';
+        });
+        rightBtn.addEventListener('mouseup', () => {
+            game.keys.right = false;
+            rightBtn.style.background = 'rgba(255, 182, 193, 0.3)';
+        });
+        
+        // 防止误触
+        leftBtn.addEventListener('touchcancel', () => game.keys.left = false);
+        rightBtn.addEventListener('touchcancel', () => game.keys.right = false);
         
         init();
         gameLoop();
